@@ -1,0 +1,182 @@
+Leave Request Approval System – Technical Specification
+________________________________________
+1. Objective
+To implement a multi-level leave approval workflow in Google Sheets and Gmail using Google Apps Script that:
+•	Supports leave requests initiated by Faculty or Chair.
+•	Tracks approvals through Chair → Dean → Hospital Director (or direct to Director if Chair initiates).
+•	Maintains a clear audit trail and logs.
+•	Sends dynamic approval emails with editable “Hours Approved” and Yes/No buttons.
+•	Minimizes unnecessary trigger activations.
+•	Provides modular, maintainable, and scalable architecture.
+________________________________________
+2. Google Sheets Structure
+All sheets are in one Google Spreadsheet for simplicity and efficiency.
+2.1 LeaveRequest Sheet
+Column	Description
+A	Timestamp (form submission time)
+B	Email Address of requestor
+C	Department
+D	Position (Faculty / Chair)
+E	Type of Leave
+F	From (Start Date)
+G	To (End Date)
+H	Additional Detail (optional text)
+I	Total Hours Requested
+J	Additional Information (optional)
+K	Supporting Document Upload
+L	Token Number (auto-generated, unique)
+Notes: Columns M–U removed; all approvals are in separate sheets.
+________________________________________
+2.2 Department_Directory Sheet
+Column	Description
+A	Department Name
+B	Name of Chair
+C	Chair Email Address
+Used to route leave requests to the correct Chair.
+________________________________________
+2.3 Approval Sheet
+Row	Description
+B2	Dean’s Email Address
+B3	Hospital Director’s Email Address
+Used to route Dean and Director approval emails.
+________________________________________
+2.4 Chair_Approval Sheet
+Column	Description
+A	Timestamp of Chair’s approval
+B	Approval Status (Yes / No)
+C	Hours Approved
+D	Token Number
+E	Approver Email
+F	Comments (optional)
+________________________________________
+2.5 Dean_Approval Sheet
+Column	Description
+A	Timestamp of Dean’s approval
+B	Approval Status (Yes / No)
+C	Hours Approved
+D	Token Number
+E	Approver Email
+F	Comments (optional)
+________________________________________
+2.6 HospitalDirector_Approval Sheet
+Column	Description
+A	Timestamp of Director’s approval
+B	Approval Status (Yes / No)
+C	Hours Approved
+D	Token Number
+E	Approver Email
+F	Comments (optional)
+________________________________________
+3. Workflow Overview
+3.1 Faculty Initiated Leave Request
+1.	Faculty submits the Google Form.
+2.	Form data populates LeaveRequest (Columns A–I).
+3.	System generates a timestamp-based token in LeaveRequest!L.
+4.	Approval request is sent to Chair:
+o	Look up Chair email using Department_Directory.
+o	Email contains:
+	Leave details (Timestamp, Requester, Dept, Position, Leave Type, From–To, Total Hours, Additional Details)
+	Editable “Hours Approved” textbox
+	Approve / Reject buttons (linked to token-based web app)
+5.	Chair approves/rejects:
+o	Record written to Chair_Approval.
+o	Notification sent to Faculty, Chair.
+o	If approved → Dean approval triggered.
+o	If rejected → workflow ends.
+6.	Dean approval:
+o	Email includes request summary and Chair’s decision.
+o	Dean edits hours and clicks Approve/Reject.
+o	Record written to Dean_Approval.
+o	Notification sent to Faculty, Chair, Dean.
+o	If approved → Hospital Director approval triggered.
+o	If rejected → workflow ends.
+7.	Hospital Director approval:
+o	Email includes full summary (Faculty request + Chair + Dean decisions)
+o	Director edits hours, clicks Approve/Reject.
+o	Record written to HospitalDirector_Approval.
+o	Notification sent to Faculty, Chair, Dean, Director.
+o	Workflow marked as Completed.
+________________________________________
+3.2 Chair Initiated Leave Request
+1.	Chair submits leave form.
+2.	Form data populates LeaveRequest.
+3.	Token generated in LeaveRequest!L.
+4.	Approval request sent directly to Hospital Director (Approval!B3).
+5.	Director approves/rejects:
+o	Record written to HospitalDirector_Approval.
+o	Notifications sent to Chair, Dean, Director.
+6.	Workflow marked as Completed.
+________________________________________
+4. Token-Based Tracking
+•	Token format: LR-[YYYYMMDD]-[HHMMSS]-[Random3Letters]
+•	Stored in LeaveRequest!L.
+•	All approval sheets reference the token (Column D) for relational tracking.
+•	Ensures accurate linking of approvals to leave request.
+________________________________________
+5. Email Flow
+5.1 Chair Email (for Faculty-initiated request)
+•	Request summary (Columns A–I)
+•	Editable Hours Approved textbox
+•	Approve / Reject buttons
+•	On button click → triggers handleChairResponse(token, decision, hours)
+________________________________________
+5.2 Dean Email (after Chair approval)
+•	Leave request summary
+•	Chair’s decision summary
+•	Editable Hours Approved textbox
+•	Approve / Reject buttons
+•	On button click → triggers handleDeanResponse(token, decision, hours)
+________________________________________
+5.3 Hospital Director Email
+•	Full summary of leave request, Chair and Dean approvals
+•	Editable Hours Approved textbox
+•	Approve / Reject buttons
+•	On button click → triggers handleDirectorResponse(token, decision, hours)
+________________________________________
+5.4 Final Notification
+•	Sent to all relevant parties:
+o	Faculty, Chair, Dean, Director
+•	Includes final approval status, approved hours, and timestamps.
+________________________________________
+ 
+6. Trigger Flow Table
+Trigger Name	Trigger Type	Activated When	Sheet Target	Function	Safeguards	Outcome
+onLeaveRequestSubmit	installable onFormSubmit	New leave request	LeaveRequest	Generate token, send initial email	Only trigger for new entries, skip if token exists	Chair email sent / Director if Chair initiates
+handleChairApproval	installable onEdit	Chair edits Column B	Chair_Approval	Record decision, timestamp, token, send Dean email if approved	Confirm sheet & column, valid token	Chair_Approval log updated, next approver notified
+handleDeanApproval	installable onEdit	Dean edits Column B	Dean_Approval	Record decision, timestamp, token, send Director email if approved	Confirm sheet & column, valid token	Dean_Approval log updated, next approver notified
+handleDirectorApproval	installable onEdit	Director edits Column B	HospitalDirectorApproval	Record decision, timestamp, token, send final notification	Confirm sheet & column, valid token	Director_Approval log updated, workflow completed
+checkAllApprovals	time-driven	Periodic (every 10 min)	All sheets	Detect fully approved requests, mark final	Skip already processed	Trigger final notification
+checkPendingApprovals	time-driven	Every 24h	All sheets	Identify pending approvals >48h, send reminder	Only unprocessed requests	Reminder emails sent
+________________________________________ 
+7. Utility Functions
+Function	Purpose
+generateToken()	Create timestamp + random token for new requests
+sendApprovalEmail(role, email, token, details)	Generate HTML email for approval with editable hours and buttons
+handleChairResponse(token, decision, hours)	Record Chair approval and trigger Dean email if approved
+handleDeanResponse(token, decision, hours)	Record Dean approval and trigger Director email if approved
+handleDirectorResponse(token, decision, hours)	Record Director approval and trigger final notification
+sendFinalNotification(token)	Notify all parties with final approval summary
+logAction(actor, action, sheet, rowId)	Append audit log entry
+enableAllTriggers() / disableAllTriggers()	Administrative control for debugging
+________________________________________
+8. Safeguards & Best Practices
+1.	Installable triggers only (avoid simple onEdit / onFormSubmit)
+2.	Conditional checks in every trigger (sheet, column, token validity)
+3.	Centralized logging (hidden sheet or Logger) to avoid loops
+4.	Single spreadsheet to reduce cross-file delays and authorization issues
+5.	Modular scripts:
+o	Code.gs → main logic
+o	EmailUtils.gs → email templates
+o	ApprovalProcessing.gs → handle approval updates
+o	HTML folder → email templates
+6.	Time-based triggers for backups or reminders (5–10 min for critical, 24h for reminders)
+7.	Token-based relational tracking ensures all approval logs are linked to the original request
+8.	Audit trail in approval sheets ensures traceability and accountability
+________________________________________
+9. Optional Enhancements
+•	Web App dashboard for approvals with live status display.
+•	Conditional formatting in LeaveRequest to show Pending / Approved / Rejected visually.
+•	Automatic PDF generation of leave approval summary for record-keeping.
+•	Attach documents or additional notes in email replies.
+________________________________________
+
