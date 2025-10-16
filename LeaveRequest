@@ -1,0 +1,127 @@
+RAW
+I am creating a leave request form in google form which has following field
+Email Address, Department, Position, Type of Leave, From, To, Please use this fieldif there are multiple entries, Total Hours
+Following roles are defined
+1.	Faculty
+2.	Chair of the department
+3.	Dean
+4.	Hospital Director
+Following are the sheet
+Sheet ID = 11XkxenmBy1ZZ_pq_-3qJHs5kWivzUK5HaQNZaATw2Vs
+Sheet name = LeaveRequest
+The Columns are
+A= Timestamp
+B= Email Address
+C= Department
+D= Position
+E= Type of Leave
+F= From
+G= To
+H= Please use this field, if there are multiple entries
+I= Total Hours
+J= Additional Information
+K= Upload any supporting document
+L= Token Number
+M= Approved by HoD
+N= Approved by HoD on
+O= Hours Approved by HoD
+P=Approved by Dean
+Q= Approved by Dean on
+R= Hours Approved by Dean
+S= Approved by Hospital Director
+T= Approved by Hospital Director on
+U= Hours Approved by Hospital Director
+Sheet Name = Department Directory 
+Columns are as follows
+A= Department
+B= Name of Chair
+C= Email Address
+Sheet Name = Approval
+Columns are as follows
+A = Position
+B= Name
+C= Email
+Email address of dean = B2
+Email address of director = B3
+The leave request forms are initiated either by Faculty or Chair of Department
+Faculty Initiates Leave Request
+On submission of form the information is recorded in LeaveRequest from Column A to H
+A random token number is generated in column number L
+Approval request is sent to Chair of the department: Department field C of the Sheet LeaveRequest is matched with Sheet DepartmentDirectory column A. In the matching field the corresponding Row is selected in Column C for Email Address. Approval request should contain the following of LeaveRequest Sheet in HTML format
+Request time = Column A
+Request by = Column B
+Department = Column C
+Position = Column D
+Type of Leave = Column E
+Leave request From = Column F
+Leave Request To: Column G
+Additional Detail = Column H
+Total Hour of Leave Requested = Column I
+Token Number = Column L
+Put editable TEXT BOX  containing Total Hours of Leave or if not edited it will take value of Total Hours of Leave Requested
+Write Approve then put Yes and No button
+On clicking Yes or No button following action should be initiated: Track the token number to sheet LeaveRequest and on matching token number put value Yes or No in Column M, put the value of TEXT BOX in column O and put time stamp of this field entry (column M, O)  in column M and send a copy to the Faculty and Chair  initiating email. For this track back token number and get email address from Column B of LeaveRequest for faculty and track Column C get input and match with Column A of DepartmentDirectory and send email to column C corresponding row. The email should contain following: Subject = Leave Request Status by Chair and the Body Should Contain the following 
+Token Number: Column L
+Leave Requested By Faculty
+
+Approved by Dean: Column M
+Hour Approved by Chair: Column O
+Time of Approval: Column N
+Another email is sent to Dean. An email in HTML format will be sent to Dean, the email of dean in sheet Approval Column B2. The email should contain following
+The First Part should contain “Leave Requested by faculty”
+Request time = Column A
+Request by = Column B
+Department = Column C
+Position = Column D
+Type of Leave = Column E
+Leave request From = Column F
+Leave Request To: Column G
+Additional Detail = Column H
+Total Hour of Leave Requested = Column I
+
+The second part should contain following under heading “Status of Approval by Chair”
+Token Number: Column L
+Approved by Chair: Column M
+Hour Approved by Chair: Column O
+Time of Approval: Column N
+Third part should contain 
+Put editable TEXT BOX  containing Total Hours of Leave or if not edited it will take value of Total Hours of Leave Requested
+Write Approve then put Yes and No button
+On clicking Yes or No button following action should be initiated: Track the token number to sheet LeaveRequest and on matching token number put value Yes or No in Column P, put the value of TEXT BOX in column R and put time stamp of this field entry (P,R)  in column Q and send a copy to the Faculty initiating email, Chair and Dean For this track back token number and get email address from Column B of LeaveRequest for faculty and track Column C get input and match with Column A of DepartmentDirectory and send email to column C corresponding row and for Dean get email address from Approval cell number B2. The email should contain following: Subject = Leave Request Status by Dean and the Body Should Contain the following 
+Token Number: Column L
+Approved by Dean: Column P
+Hour Approved by Chair: Column R
+Time of Approval: Column Q
+
+
+Request Initiated By Chair of the Department
+On submission of form the information is recorded in LeaveRequest from Column A to H
+A random token number is generated in column number L
+Approval request is sent to Hosptital Director whose email address is in Sheet Approval cell B3: Approval request should contain the following of LeaveRequest Sheet in HTML format 
+Request time = Column A
+Request by = Column B
+Department = Column C
+Position = Column D
+Type of Leave = Column E
+Leave request From = Column F
+Leave Request To: Column G
+Additional Detail = Column H
+Total Hour of Leave Requested = Column I
+Token Number = Column L
+Put editable TEXT BOX  containing Total Hours of Leave or if not edited it will take value of Total Hours of Leave Requested
+Write Approve then put Yes and No button
+On clicking Yes or No button following action should be initiated: Track the token number to sheet LeaveRequest and on matching token number put value Yes or No in Column S, put the value of TEXT BOX in column U and put time stamp of this field entry (column S, U)  in column T and send a copy to the Chair  initiating email, Director and Dean. For this track back token number and get email address from Column B of LeaveRequest for Chairs email requesting leave and Send a copy to Hospital Director whose email is in Sheet Approval cell B3 and to the Dean whose email address is in Sheet Approval cell B3
+The email should contain following: Subject = Leave Request Status by Hospital Director and the Body Should Contain the following 
+Token Number: Column L
+Leave Requested By Chair
+
+Approved by Hospital Director: Column S
+Hour Approved by Chair: Column U
+Time of Approval: Column T
+
+
+Approval request is sent to Dean: Department field C of the Sheet LeaveRequest is matched with Sheet DepartmentDirectory column A. In the matching field the corresponding Row is selected in Column C for Email Address. Approval request should contain the following of LeaveRequest Sheet in HTML format
+
+To note
+Leave request form can be multiple from various sources, therefore triggering last line will not work, this system should be triggered by emails and the right location should be guided by Token Number
+
